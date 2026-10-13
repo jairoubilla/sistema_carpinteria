@@ -5,10 +5,11 @@ clientes_registrados = []
 presupuestos_registrados = []
 
 while True:
-    print("Bienvenido al Sistema de Gestion de Carpinteria")
+    print("---BIENVENIDO AL SISTEMA DE GESTIÓN DE CARPINTERÍA---")
     print("1. Registrar nuevo presupuesto")
     print("2. Ver todos los presupuestos")
-    print("3. Salir")
+    print("3. Ver historial completo")
+    print("4. Salir")
     
     opcion = input("Seleccione una opción: ")
     if opcion == "1":
@@ -32,6 +33,14 @@ while True:
         for presu in presupuestos_registrados:
             print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
     elif opcion == "3":
+        try:
+            with open("historial_presupuestos.txt", "r") as archivo:
+                historial = archivo.read()
+                print("---HISTORIAL HISTÓRICO ---")
+                print(historial)
+        except FileNotFoundError:
+            print("No hay historial disponible.")
+    elif opcion == "4":
         print("Cerrando el sistema. ¡Hasta luego!")
         break
     else:
