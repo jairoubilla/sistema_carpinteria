@@ -53,9 +53,11 @@ while True:
 
         clientes_registrados.append(nuevo_cliente)
         presupuestos_registrados.append(nuevo_presupuesto)
-        
+
         print(f"Presupuestos pedidos por {nuevo_cliente.nombre}: {nuevo_cliente.presupuestos_pedidos}")
         print(f"El presupuesto para {nuevo_presupuesto.cliente.nombre} es de ${nuevo_presupuesto.total} y esta {nuevo_presupuesto.estado}")
+        print(f"Seña requerida: ${nuevo_presupuesto.finanzas.sena_requerida}")
+        print(f"Saldo pendiente: ${nuevo_presupuesto.finanzas.saldo_pendiente}")
         
         with open("historial_presupuestos.txt", "a") as archivo:
             archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado}\n")
