@@ -11,19 +11,25 @@ try:
             # 1. Limpiamos el Enter (\n) del final de la línea
             linea_limpia = linea.strip()
             
+            # Si el renglón está vacío, lo saltamos
+            if linea_limpia == "":
+                continue
+            
             # 2. Cortamos la línae por los guiones "-"
             # Esto crea una lista de 4 elementos: ["Cliente: nombre", " Telefono: telefono", " Presupuesto: monto", " Estado: estado"]
-            partes = linea_limpia.split("-")
+            partes = linea_limpia.split(" - ")
             
             # 3. De cada parte, cortamos por los dos puntos ":" y nos quedamos con el segundo elemento (índice 1) que es el valor
             nombre_guardado = partes[0].split(": ")[1]
             telefono_guardado = partes[1].split(": ")[1]
             monto_guardado = float(partes[2].split(": ")[1]) # Comvertimos a número porque es dinero!
             estado_guardado = partes[3].split(": ")[1]
+            saldo_guardado = float(partes[4].split(": ")[1])
             
             # 4. Reconstruimos los objetos usando las Clases
             cliente_recuperado = Cliente(nombre_guardado, telefono_guardado)
             presu_recuperado = Presupuesto(cliente_recuperado, monto_guardado)
+            presu_recuperado.finanzas.saldo_pendiente = saldo_guardado
             
             # 5. Los guardamos en las listas de la memoria RAM
             clientes_registrados.append(cliente_recuperado)
@@ -60,7 +66,7 @@ while True:
         print(f"Saldo pendiente: ${nuevo_presupuesto.finanzas.saldo_pendiente}")
         
         with open("historial_presupuestos.txt", "a") as archivo:
-            archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado}\n")
+            archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado} - Saldo: {nuevo_presupuesto.finanzas.saldo_pendiente}\n")
         
     elif opcion == "2":
         for presu in presupuestos_registrados:
