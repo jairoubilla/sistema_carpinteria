@@ -42,11 +42,14 @@ except FileNotFoundError:
 # --- MENU PRINCIPAL ---
 
 while True:
+    print("")
     print("---BIENVENIDO AL SISTEMA DE GESTIÓN DE CARPINTERÍA---")
+    print("")
     print("1. Registrar nuevo presupuesto")
     print("2. Ver todos los presupuestos")
     print("3. Ver historial completo")
-    print("4. Salir")
+    print("4. Registrar pago")
+    print("5. Salir")
     
     opcion = input("Seleccione una opción: ")
     if opcion == "1":
@@ -79,7 +82,32 @@ while True:
                 print(historial)
         except FileNotFoundError:
             print("No hay historial disponible.")
+            
     elif opcion == "4":
+        nombre_buscado = input("Ingrese el nombre del cliente para registrar un pago: ")
+        cliente_encontrado = False # Una bandera para saber si tuvimos éxito
+        
+        for presu in presupuestos_registrados:
+            if presu.cliente.nombre == nombre_buscado:
+                cliente_encontrado = True
+                print(f"Saldo actual de {nombre_buscado}: ${presu.finanzas.saldo_pendiente}")
+                
+                # Pedimos el pago y aplicamos el metodo de la clase Finanzas
+                monto_pago = float(input("Ingrese el monto del pago: "))
+                presu.finanzas.registrar_pago(monto_pago)
+                
+                print(f"Pago registrado. Nuevo saldo: ${presu.finanzas.saldo_pendiente}")
+                
+                # Sobreescribimos el historial para reflejar el nuevo saldo
+                with open("historial_presupuestos.txt", "w") as archivo:
+                    for p in presupuestos_registrados:
+                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
+                        
+                break # Rompemos el for porque ya encontramos al cliente y no necesitamos seguir buscando
+            if not cliente_encontrado:
+                print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
+                
+    elif opcion == "5":
         print("Cerrando el sistema. ¡Hasta luego!")
         break
     else:
