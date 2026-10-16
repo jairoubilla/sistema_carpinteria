@@ -55,7 +55,13 @@ while True:
     if opcion == "1":
         nuevo_nombre = input("Ingrese el nombre del cliente: ")
         nuevo_telefono = input("Ingrese el teléfono del cliente: ")
-        monto_nuevo = float(input("Ingrese el monto del presupuesto: "))
+        
+        while True:
+            try:
+                monto_nuevo = float(input("Ingrese el monto del presupuesto: "))
+                break
+            except ValueError:
+                print("ERROR: Por favor, ingrese un número válido para el monto.")
 
         nuevo_cliente = Cliente(nuevo_nombre, nuevo_telefono)
         nuevo_presupuesto = Presupuesto(nuevo_cliente, monto_nuevo)
@@ -93,7 +99,12 @@ while True:
                 print(f"Saldo actual de {nombre_buscado}: ${presu.finanzas.saldo_pendiente}")
                 
                 # Pedimos el pago y aplicamos el metodo de la clase Finanzas
-                monto_pago = float(input("Ingrese el monto del pago: "))
+                while True:
+                    try:
+                        monto_pago = float(input("Ingrese el monto del pago: "))
+                        break
+                    except ValueError:
+                        print("ERROR: Por favor, ingrese un número válido para el monto.")
                 presu.finanzas.registrar_pago(monto_pago)
                 
                 print(f"Pago registrado. Nuevo saldo: ${presu.finanzas.saldo_pendiente}")
