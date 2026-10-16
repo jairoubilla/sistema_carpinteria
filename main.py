@@ -115,8 +115,8 @@ while True:
                         archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
                         
                 break # Rompemos el for porque ya encontramos al cliente y no necesitamos seguir buscando
-            if not cliente_encontrado:
-                print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
+        if not cliente_encontrado:
+            print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
                 
     elif opcion == "5":
         print("Cerrando el sistema. ¡Hasta luego!")
