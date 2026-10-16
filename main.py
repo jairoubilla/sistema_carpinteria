@@ -1,5 +1,6 @@
 from clientes import Cliente
 from presupuestos import Presupuesto
+import os
 
 clientes_registrados = []
 presupuestos_registrados = []
@@ -42,6 +43,7 @@ except FileNotFoundError:
 # --- MENU PRINCIPAL ---
 
 while True:
+    os.system("cls")
     print("")
     print("---BIENVENIDO AL SISTEMA DE GESTIÓN DE CARPINTERÍA---")
     print("")
@@ -80,15 +82,20 @@ while True:
     elif opcion == "2":
         for presu in presupuestos_registrados:
             print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
+            
+        input("\nPresione ENTER para volver al menú principal...")
+        
     elif opcion == "3":
         try:
             with open("historial_presupuestos.txt", "r") as archivo:
                 historial = archivo.read()
-                print("---HISTORIAL HISTÓRICO ---")
+                print("\n---HISTORIAL HISTÓRICO ---")
                 print(historial)
         except FileNotFoundError:
             print("No hay historial disponible.")
-            
+        
+        input("\nPresione ENTER para volver al menú principal...")
+        
     elif opcion == "4":
         nombre_buscado = input("Ingrese el nombre del cliente para registrar un pago: ")
         cliente_encontrado = False # Una bandera para saber si tuvimos éxito
