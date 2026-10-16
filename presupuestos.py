@@ -6,3 +6,6 @@ class Presupuesto:
         self.total = total_calculado
         self.estado = "Pendiente"
         self.finanzas = Finanzas(total_calculado)
+        
+    def actualizar_estado(self, nuevo_estado):
+        self.estado = nuevo_estado
