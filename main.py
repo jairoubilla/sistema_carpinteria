@@ -52,7 +52,8 @@ while True:
     print("3. Ver historial completo")
     print("4. Registrar pago")
     print("5. Actualizar estado del trabajo")
-    print("6. Salir")
+    print("6. Eliminar presupuesto")
+    print("7. Salir")
     
     opcion = input("Seleccione una opción: ")
     if opcion == "1":
@@ -149,8 +150,29 @@ while True:
             print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
         
         input("\nPresione ENTER para volver al menú principal...")
-                
+        
     elif opcion == "6":
+        nombre_buscado = input("Ingrese el nombre del cliente para eliminar su presupuesto: ")
+        cliente_encontrado = False
+        
+        for presu in presupuestos_registrados:
+            if presu.cliente.nombre == nombre_buscado:
+                cliente_encontrado = True
+                presupuestos_registrados.remove(presu)
+                print(f"Presupuesto de {nombre_buscado} eliminado.")
+                
+                # Sobreescribimos el historial para reflejar la eliminación
+                with open("historial_presupuestos.txt", "w") as archivo:
+                    for p in presupuestos_registrados:
+                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
+                        
+                break
+        if not cliente_encontrado:
+            print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
+        
+        input("\nPresione ENTER para volver al menú principal...")
+                
+    elif opcion == "7":
         print("Cerrando el sistema. ¡Hasta luego!")
         break
     else:
