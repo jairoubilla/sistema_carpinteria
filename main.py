@@ -26,11 +26,13 @@ try:
             monto_guardado = float(partes[2].split(": ")[1]) # Comvertimos a número porque es dinero!
             estado_guardado = partes[3].split(": ")[1]
             saldo_guardado = float(partes[4].split(": ")[1])
+            fecha_guardada = partes[5].split(": ")[1]
             
             # 4. Reconstruimos los objetos usando las Clases
             cliente_recuperado = Cliente(nombre_guardado, telefono_guardado)
             presu_recuperado = Presupuesto(cliente_recuperado, monto_guardado)
             presu_recuperado.finanzas.saldo_pendiente = saldo_guardado
+            presu_recuperado.fecha = fecha_guardada
             
             # 5. Los guardamos en las listas de la memoria RAM
             clientes_registrados.append(cliente_recuperado)
@@ -79,11 +81,11 @@ while True:
         print(f"Saldo pendiente: ${nuevo_presupuesto.finanzas.saldo_pendiente}")
         
         with open("historial_presupuestos.txt", "a") as archivo:
-            archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado} - Saldo: {nuevo_presupuesto.finanzas.saldo_pendiente}\n")
+            archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado} - Saldo: {nuevo_presupuesto.finanzas.saldo_pendiente} - Fecha: {nuevo_presupuesto.fecha}\n")
         
     elif opcion == "2":
         for presu in presupuestos_registrados:
-            print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
+            print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado} - Fecha: {presu.fecha}")
             
         input("\nPresione ENTER para volver al menú principal...")
         
@@ -121,7 +123,7 @@ while True:
                 # Sobreescribimos el historial para reflejar el nuevo saldo
                 with open("historial_presupuestos.txt", "w") as archivo:
                     for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
+                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
                         
                 break # Rompemos el for porque ya encontramos al cliente y no necesitamos seguir buscando
         if not cliente_encontrado:
@@ -143,7 +145,7 @@ while True:
                 # Sobreescribimos el historial para reflejar el nuevo estado
                 with open("historial_presupuestos.txt", "w") as archivo:
                     for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
+                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
                         
                 break
         if not cliente_encontrado:
@@ -164,7 +166,7 @@ while True:
                 # Sobreescribimos el historial para reflejar la eliminación
                 with open("historial_presupuestos.txt", "w") as archivo:
                     for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente}\n")
+                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
                         
                 break
         if not cliente_encontrado:
