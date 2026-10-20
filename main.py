@@ -84,6 +84,13 @@ while True:
             archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado} - Saldo: {nuevo_presupuesto.finanzas.saldo_pendiente} - Fecha: {nuevo_presupuesto.fecha}\n")
         
     elif opcion == "2":
+        print("\n--- PANEL DE REPORTES ---")
+        print("A. Ver TODOS los presupuestos")
+        print("B. Ver trabajos ACTIVOS (Pendientes / En Proceso)")
+        
+        filtro = input("Seleccione un filtro (A/B): ").upper()
+        
+        
         for presu in presupuestos_registrados:
             print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado} - Fecha: {presu.fecha}")
             
