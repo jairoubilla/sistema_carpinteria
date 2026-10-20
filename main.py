@@ -88,11 +88,18 @@ while True:
         print("A. Ver TODOS los presupuestos")
         print("B. Ver trabajos ACTIVOS (Pendientes / En Proceso)")
         
-        filtro = input("Seleccione un filtro (A/B): ").upper()
+        filtro = input("Seleccione un filtro (A/B): ").strip().upper()
         
-        
+        print("\n---  LISTADO DE PRESUPUESTOS ---")
         for presu in presupuestos_registrados:
-            print(f"Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado} - Fecha: {presu.fecha}")
+            estado_limpio = presu.estado.strip().lower()
+            
+            print(f"DEBUG -> Filtro: [{filtro}] | Estado Limpio: [{estado_limpio}]")
+            
+            if filtro == "B" and estado_limpio in ["entregado", "terminado", "completado"]:
+                continue # Saltamos los presupuestos que no están activos
+            
+            print(f"Fecha: {presu.fecha} - Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
             
         input("\nPresione ENTER para volver al menú principal...")
         
