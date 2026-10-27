@@ -3,6 +3,16 @@ from presupuestos import Presupuesto
 
 import os
 import json
+import subprocess
+
+
+def limpiar_pantalla():
+    if os.name == "nt":
+        subprocess.run(["cmd", "/c", "cls"], shell=False, check=False,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        subprocess.run(["clear"], shell=False, check=False,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 clientes_registrados = []
 presupuestos_registrados = []
@@ -14,6 +24,7 @@ def guardar_datos():
     # Recorremos nuestros objetos y los transformamos en diccionarios
     for presu in presupuestos_registrados:
         diccionario = {
+            "id_orden": presu.id_orden,
             "cliente": presu.cliente.nombre,
             "telefono": presu.cliente.telefono,
             "monto_total": presu.total,
@@ -37,7 +48,7 @@ try:
         for dato in datos_guardados:
             # 1. Reconstruimos los objetos usando las claves del diccionario
             cliente_recuperado = Cliente(dato["cliente"], dato["telefono"])
-            presu_recuperado = Presupuesto(cliente_recuperado, dato["monto_total"])
+            presu_recuperado = Presupuesto(cliente_recuperado, dato["monto_total"], dato["id_orden"])
             
             # 2. Inyectamos la historia
             presu_recuperado.estado = dato["estado"]
@@ -56,7 +67,7 @@ except FileNotFoundError:
 # --- MENU PRINCIPAL ---
 
 while True:
-    os.system("cls")
+    limpiar_pantalla()
     print("")
     print("---BIENVENIDO AL SISTEMA DE GESTIÓN DE CARPINTERÍA---")
     print("")
@@ -107,7 +118,7 @@ while True:
             if filtro == "B" and estado_limpio in ["entregado", "terminado", "completado"]:
                 continue # Saltamos los presupuestos que no están activos
             
-            print(f"Fecha: {presu.fecha} - Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
+            print(f"[Orden #{presu.id_orden}] Fecha: {presu.fecha} - Presupuesto: {presu.total} - Cliente: {presu.cliente.nombre} - Estado: {presu.estado}")
             
         input("\nPresione ENTER para volver al menú principal...")
         
@@ -123,68 +134,95 @@ while True:
         input("\nPresione ENTER para volver al menú principal...")
         
     elif opcion == "4":
-        nombre_buscado = input("Ingrese el nombre del cliente para registrar un pago: ")
-        cliente_encontrado = False # Una bandera para saber si tuvimos éxito
+        try:
+            id_buscado = int(input("Ingrese el NÚMERO DE ORDEN para registrar un pago: "))
+        except ValueError:
+            print("ERROR: Debe ingresar un número válido.")
+            input("\nPresione ENTER para volver al menú principal...")
+            continue
+        
+        orden_encontrada = False
         
         for presu in presupuestos_registrados:
-            if presu.cliente.nombre == nombre_buscado:
-                cliente_encontrado = True
-                print(f"Saldo actual de {nombre_buscado}: ${presu.finanzas.saldo_pendiente}")
+            # Comparamos la clave primaria
+            if presu.id_orden == id_buscado:
+                orden_encontrada = True
+                print(f"Cliente: {presu.cliente.nombre} | Saldo actual: ${presu.finanzas.saldo_pendiente}")
                 
-                # Pedimos el pago y aplicamos el metodo de la clase Finanzas
+                # Pedimos el dinero con nuestro blindaje
                 while True:
                     try:
                         monto_pago = float(input("Ingrese el monto del pago: "))
                         break
                     except ValueError:
-                        print("ERROR: Por favor, ingrese un número válido para el monto.")
-                presu.finanzas.registrar_pago(monto_pago)
+                        print("ERROR: Ingrese un número válido para el monto.")
                 
+                presu.finanzas.registrar_pago(monto_pago)
                 print(f"Pago registrado. Nuevo saldo: ${presu.finanzas.saldo_pendiente}")
                 
                 guardar_datos()
-                        
-                break # Rompemos el for porque ya encontramos al cliente y no necesitamos seguir buscando
-        if not cliente_encontrado:
-            print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
-            
-    elif opcion == "5":
-        nombre_buscado = input("Ingrese el nombre del cliente para actualizar el estado del trabajo: ")
-        cliente_encontrado = False
-        
-        for presu in presupuestos_registrados:
-            if presu.cliente.nombre == nombre_buscado:
-                cliente_encontrado = True
-                print(f"Estado actual de {nombre_buscado}: {presu.estado}")
-                nuevo_estado = input("Ingrese el nuevo estado del trabajo (Pendiente, En Proceso, Completado): ")
-                presu.actualizar_estado(nuevo_estado)
-                
-                print(f"Estado actualizado. Nuevo estado: {presu.estado}")
-                
-                guardar_datos()
-                        
                 break
-        if not cliente_encontrado:
-            print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
-        
+                
+        if not orden_encontrada:
+            print(f"No se encontró ninguna orden con el número #{id_buscado}.")
+            
         input("\nPresione ENTER para volver al menú principal...")
         
-    elif opcion == "6":
-        nombre_buscado = input("Ingrese el nombre del cliente para eliminar su presupuesto: ")
-        cliente_encontrado = False
+    elif opcion == "5":
+        # Usamos un try/except por si el usuario tipea letras en lugar del número de orden
+        try:
+            id_buscado = int(input("Ingrese el NÚMERO DE ORDEN para actualizar el estado: "))
+        except ValueError:
+            print("ERROR: Debe ingresar un número válido.")
+            input("\nPresione ENTER para volver al menú principal...")
+            continue # Salta de vuelta al inicio del menú
+        
+        orden_encontrada = False
         
         for presu in presupuestos_registrados:
-            if presu.cliente.nombre == nombre_buscado:
-                cliente_encontrado = True
+            # Comparamos los IDs 
+            if presu.id_orden == id_buscado:
+                orden_encontrada = True
+                print(f"Trabajo de: {presu.cliente.nombre} | Estado actual: {presu.estado}")
+                
+                nuevo_estado = input("Ingrese el nuevo estado del trabajo: ")
+                presu.actualizar_estado(nuevo_estado)
+                
+                print(f"Estado actualizado con éxito a: {presu.estado}")
+                
+                # Función de guardado
+                guardar_datos()
+                break
+            
+        if not orden_encontrada:
+            print(f"No se encontró ninguna orden con el número #{id_buscado}.")
+            
+        input("\nPresione ENTER para volver al menú principal...")    
+        
+    elif opcion == "6":
+        try:
+            id_buscado = int(input("Ingrese el NÚMERO DE ORDEN para eliminar su presupuesto: "))
+        except ValueError:
+            print("ERROR: Debe ingresar un número válido.")
+            input("\nPresione ENTER para volver al menú principal...")
+            continue
+        
+        orden_encontrada = False
+        
+        for presu in presupuestos_registrados:
+            if presu.id_orden == id_buscado:
+                orden_encontrada = True
+                
+                # Borramos el objeto de la lista RAM
                 presupuestos_registrados.remove(presu)
-                print(f"Presupuesto de {nombre_buscado} eliminado.")
+                print(f"¡La orden #{id_buscado} ha sido eliminada definitivamente!")
                 
                 guardar_datos()
-                        
                 break
-        if not cliente_encontrado:
-            print(f"No se encontró un cliente con el nombre {nombre_buscado}.")
-        
+            
+        if not orden_encontrada:
+            print(f"No se encontró ninguna orden con el número #{id_buscado}.")
+            
         input("\nPresione ENTER para volver al menú principal...")
                 
     elif opcion == "7":
