@@ -1,46 +1,57 @@
 from clientes import Cliente
 from presupuestos import Presupuesto
+
 import os
+import json
 
 clientes_registrados = []
 presupuestos_registrados = []
 
+def guardar_datos():
+    # Craemos una lista vacia para guardar los datos puros
+    lista_para_guardar = []
+    
+    # Recorremos nuestros objetos y los transformamos en diccionarios
+    for presu in presupuestos_registrados:
+        diccionario = {
+            "cliente": presu.cliente.nombre,
+            "telefono": presu.cliente.telefono,
+            "monto_total": presu.total,
+            "estado": presu.estado,
+            "saldo_pendiente": presu.finanzas.saldo_pendiente,
+            "fecha": presu.fecha
+        }
+        lista_para_guardar.append(diccionario)
+        
+    # Guardamos la lista de diccionarios en un archivo .json mágico
+    with open("base_datos.json", "w") as archivo:
+        json.dump(lista_para_guardar, archivo, indent=4)
+        
+
 # --- RUTINA DE ARRANQUE ---
 try:
-    with open("historial_presupuestos.txt", "r") as archivo:
-        for linea in archivo:
-            # 1. Limpiamos el Enter (\n) del final de la línea
-            linea_limpia = linea.strip()
+    with open("base_datos.json", "r") as archivo:
+        # json.load lee el archivo y nos devuelve la lista ya armada
+        datos_guardados = json.load(archivo)
+        
+        for dato in datos_guardados:
+            # 1. Reconstruimos los objetos usando las claves del diccionario
+            cliente_recuperado = Cliente(dato["cliente"], dato["telefono"])
+            presu_recuperado = Presupuesto(cliente_recuperado, dato["monto_total"])
             
-            # Si el renglón está vacío, lo saltamos
-            if linea_limpia == "":
-                continue
+            # 2. Inyectamos la historia
+            presu_recuperado.estado = dato["estado"]
+            presu_recuperado.finanzas.saldo_pendiente = dato["saldo_pendiente"]
+            presu_recuperado.fecha = dato["fecha"]
             
-            # 2. Cortamos la línae por los guiones "-"
-            # Esto crea una lista de 4 elementos: ["Cliente: nombre", " Telefono: telefono", " Presupuesto: monto", " Estado: estado"]
-            partes = linea_limpia.split(" - ")
-            
-            # 3. De cada parte, cortamos por los dos puntos ":" y nos quedamos con el segundo elemento (índice 1) que es el valor
-            nombre_guardado = partes[0].split(": ")[1]
-            telefono_guardado = partes[1].split(": ")[1]
-            monto_guardado = float(partes[2].split(": ")[1]) # Comvertimos a número porque es dinero!
-            estado_guardado = partes[3].split(": ")[1]
-            saldo_guardado = float(partes[4].split(": ")[1])
-            fecha_guardada = partes[5].split(": ")[1]
-            
-            # 4. Reconstruimos los objetos usando las Clases
-            cliente_recuperado = Cliente(nombre_guardado, telefono_guardado)
-            presu_recuperado = Presupuesto(cliente_recuperado, monto_guardado)
-            presu_recuperado.finanzas.saldo_pendiente = saldo_guardado
-            presu_recuperado.fecha = fecha_guardada
-            
-            # 5. Los guardamos en las listas de la memoria RAM
+            # 3. Guardamos en la memoria RAM
             clientes_registrados.append(cliente_recuperado)
             presupuestos_registrados.append(presu_recuperado)
-        
-    print(f"SISTEMA INICIADO: Se recuperaron {len(presupuestos_registrados)} presupuestos de la base de datos.")
+            
+    print(f"SISTEMA INICIADO: Se recuperaron {len(presupuestos_registrados)} presupuestos (Formato JSON).")
 except FileNotFoundError:
-    print("SISTEMA INICIADO: Base de datos nueva. No se encontraron presupuestos previos.")
+    print("SISTEMA INICIADO: Base de datos JSON limpia. No se encontraron registros.")
+    
 
 # --- MENU PRINCIPAL ---
 
@@ -80,8 +91,7 @@ while True:
         print(f"Seña requerida: ${nuevo_presupuesto.finanzas.sena_requerida}")
         print(f"Saldo pendiente: ${nuevo_presupuesto.finanzas.saldo_pendiente}")
         
-        with open("historial_presupuestos.txt", "a") as archivo:
-            archivo.write(f"Cliente: {nuevo_cliente.nombre} - Telefono: {nuevo_cliente.telefono} - Presupuesto: {nuevo_presupuesto.total} - Estado: {nuevo_presupuesto.estado} - Saldo: {nuevo_presupuesto.finanzas.saldo_pendiente} - Fecha: {nuevo_presupuesto.fecha}\n")
+        guardar_datos()
         
     elif opcion == "2":
         print("\n--- PANEL DE REPORTES ---")
@@ -94,8 +104,6 @@ while True:
         for presu in presupuestos_registrados:
             estado_limpio = presu.estado.strip().lower()
             
-            print(f"DEBUG -> Filtro: [{filtro}] | Estado Limpio: [{estado_limpio}]")
-            
             if filtro == "B" and estado_limpio in ["entregado", "terminado", "completado"]:
                 continue # Saltamos los presupuestos que no están activos
             
@@ -105,7 +113,7 @@ while True:
         
     elif opcion == "3":
         try:
-            with open("historial_presupuestos.txt", "r") as archivo:
+            with open("base_datos.json", "r") as archivo:
                 historial = archivo.read()
                 print("\n---HISTORIAL HISTÓRICO ---")
                 print(historial)
@@ -134,10 +142,7 @@ while True:
                 
                 print(f"Pago registrado. Nuevo saldo: ${presu.finanzas.saldo_pendiente}")
                 
-                # Sobreescribimos el historial para reflejar el nuevo saldo
-                with open("historial_presupuestos.txt", "w") as archivo:
-                    for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
+                guardar_datos()
                         
                 break # Rompemos el for porque ya encontramos al cliente y no necesitamos seguir buscando
         if not cliente_encontrado:
@@ -156,10 +161,7 @@ while True:
                 
                 print(f"Estado actualizado. Nuevo estado: {presu.estado}")
                 
-                # Sobreescribimos el historial para reflejar el nuevo estado
-                with open("historial_presupuestos.txt", "w") as archivo:
-                    for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
+                guardar_datos()
                         
                 break
         if not cliente_encontrado:
@@ -177,10 +179,7 @@ while True:
                 presupuestos_registrados.remove(presu)
                 print(f"Presupuesto de {nombre_buscado} eliminado.")
                 
-                # Sobreescribimos el historial para reflejar la eliminación
-                with open("historial_presupuestos.txt", "w") as archivo:
-                    for p in presupuestos_registrados:
-                        archivo.write(f"Cliente: {p.cliente.nombre} - Telefono: {p.cliente.telefono} - Presupuesto: {p.total} - Estado: {p.estado} - Saldo: {p.finanzas.saldo_pendiente } - Fecha: {p.fecha}\n")
+                guardar_datos()
                         
                 break
         if not cliente_encontrado:

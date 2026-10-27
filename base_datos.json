@@ -1,0 +1,10 @@
+[
+    {
+        "cliente": "Ana-Mesas",
+        "telefono": "2604227788",
+        "monto_total": 80000.0,
+        "estado": "Pendiente",
+        "saldo_pendiente": 80000.0,
+        "fecha": "27/10/2026"
+    }
+]
