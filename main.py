@@ -112,13 +112,26 @@ while True:
         input("\nPresione ENTER para volver al menú principal...")
         
     elif opcion == "3":
+        print("\n--- HISTORIAL COMPLETO (Base de Datos PostgreSQL) ---")
         try:
-            with open("base_datos.json", "r") as archivo:
-                historial = archivo.read()
-                print("\n---HISTORIAL HISTÓRICO ---")
-                print(historial)
-        except FileNotFoundError:
-            print("No hay historial disponible.")
+            conexion = conectar_db()
+            cursor = conexion.cursor()
+            
+            # Consultamos directamente a PostgreSQL
+            cursor.execute("SELECT id_orden, cliente_nombre, cliente_telefono, monto_total, estado, saldo_pendiente, fecha FROM presupuestos")
+            filas = cursor.fetchall()
+            
+            if not filas:
+                print("No hay registros en la base de datos.")
+            else:
+                for fila in filas:
+                    id_orden, nombre, telefono, monto, estado, saldo, fecha = fila
+                    print(f"[Orden #{id_orden}] Fecha: {fecha} - Presupuesto: {monto} - Cliente: {nombre} - Estado: {estado} - Saldo pendiente: {saldo}")
+                    
+            cursor.close()
+            conexion.close()
+        except Exception as e:
+            print(f"Error al consultar la base de datos: {e}")
         
         input("\nPresione ENTER para volver al menú principal...")
         
