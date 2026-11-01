@@ -1,5 +1,6 @@
 from clientes import Cliente
 from presupuestos import Presupuesto
+from database import conectar_db, guardar_en_postgres, actualizar_estado_en_postgres, actualizar_pago_en_postgres, eliminar_en_postgres
 
 import os
 import json
@@ -14,57 +15,43 @@ def limpiar_pantalla():
         subprocess.run(["clear"], shell=False, check=False,
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+# --- RUTINA DE ARRANQUE ---
+
 clientes_registrados = []
 presupuestos_registrados = []
 
-def guardar_datos():
-    # Craemos una lista vacia para guardar los datos puros
-    lista_para_guardar = []
-    
-    # Recorremos nuestros objetos y los transformamos en diccionarios
-    for presu in presupuestos_registrados:
-        diccionario = {
-            "id_orden": presu.id_orden,
-            "cliente": presu.cliente.nombre,
-            "telefono": presu.cliente.telefono,
-            "monto_total": presu.total,
-            "estado": presu.estado,
-            "saldo_pendiente": presu.finanzas.saldo_pendiente,
-            "fecha": presu.fecha
-        }
-        lista_para_guardar.append(diccionario)
-        
-    # Guardamos la lista de diccionarios en un archivo .json mágico
-    with open("base_datos.json", "w") as archivo:
-        json.dump(lista_para_guardar, archivo, indent=4)
-        
-
-# --- RUTINA DE ARRANQUE ---
 try:
-    with open("base_datos.json", "r") as archivo:
-        # json.load lee el archivo y nos devuelve la lista ya armada
-        datos_guardados = json.load(archivo)
-        
-        for dato in datos_guardados:
-            # 1. Reconstruimos los objetos usando las claves del diccionario
-            cliente_recuperado = Cliente(dato["cliente"], dato["telefono"])
-            presu_recuperado = Presupuesto(cliente_recuperado, dato["monto_total"], dato["id_orden"])
-            
-            # 2. Inyectamos la historia
-            presu_recuperado.estado = dato["estado"]
-            presu_recuperado.finanzas.saldo_pendiente = dato["saldo_pendiente"]
-            presu_recuperado.fecha = dato["fecha"]
-            
-            # 3. Guardamos en la memoria RAM
-            clientes_registrados.append(cliente_recuperado)
-            presupuestos_registrados.append(presu_recuperado)
-            
-    print(f"SISTEMA INICIADO: Se recuperaron {len(presupuestos_registrados)} presupuestos (Formato JSON).")
-except FileNotFoundError:
-    print("SISTEMA INICIADO: Base de datos JSON limpia. No se encontraron registros.")
+    conexion = conectar_db()
+    cursor = conexion.cursor()
     
+    # Pedimos todos los registros de nuestra tabla en PostgreSQL
+    cursor.execute("SELECT id_orden, cliente_nombre, cliente_telefono, monto_total, estado, saldo_pendiente, fecha FROM presupuestos")
+    filas = cursor.fetchall()
+    
+    for fila in filas:
+        # Extraemos los datos según el orden de las columnas en el SELECT
+        id_orden_db, nombre_db, telefono_db, monto_db, estado_db, saldo_db, fecha_db = fila
+        
+        # Reconstruimos los objetos
+        cliente_recuperado = Cliente(nombre_db, telefono_db)
+        presu_recuperado = Presupuesto(cliente_recuperado, float(monto_db), id_orden_db)
+        
+        presu_recuperado.estado = estado_db
+        presu_recuperado.finanzas.saldo_pendiente = float(saldo_db)
+        presu_recuperado.fecha = fecha_db
+        
+        clientes_registrados.append(cliente_recuperado)
+        presupuestos_registrados.append(presu_recuperado)
+        
+    cursor.close()
+    conexion.close()
+    print(f"SISTEMA INICIADO: Se recuperaron {len(presupuestos_registrados)} presupuestos desde PostgreSQL.")
+    
+except Exception as e:
+    print(f"SISTEMA INICIADO: Error al conectar con la base de datos o tabla vacía. ({e})")
 
 # --- MENU PRINCIPAL ---
+# Extraemos los datos segun el orden de las columnas en el SELECT
 
 while True:
     limpiar_pantalla()
@@ -102,7 +89,9 @@ while True:
         print(f"Seña requerida: ${nuevo_presupuesto.finanzas.sena_requerida}")
         print(f"Saldo pendiente: ${nuevo_presupuesto.finanzas.saldo_pendiente}")
         
-        guardar_datos()
+        # Guardamos en la base de datos
+        guardar_en_postgres(nuevo_presupuesto)
+        print("¡Presupuesto guardado exitosamente en PostgreSQL!")
         
     elif opcion == "2":
         print("\n--- PANEL DE REPORTES ---")
@@ -160,7 +149,7 @@ while True:
                 presu.finanzas.registrar_pago(monto_pago)
                 print(f"Pago registrado. Nuevo saldo: ${presu.finanzas.saldo_pendiente}")
                 
-                guardar_datos()
+                actualizar_pago_en_postgres(presu)  # Guardamos el cambio en la base de datos
                 break
                 
         if not orden_encontrada:
@@ -191,7 +180,7 @@ while True:
                 print(f"Estado actualizado con éxito a: {presu.estado}")
                 
                 # Función de guardado
-                guardar_datos()
+                actualizar_estado_en_postgres(presu)  # Guardamos el cambio en la base de datos
                 break
             
         if not orden_encontrada:
@@ -217,7 +206,7 @@ while True:
                 presupuestos_registrados.remove(presu)
                 print(f"¡La orden #{id_buscado} ha sido eliminada definitivamente!")
                 
-                guardar_datos()
+                eliminar_en_postgres(presu)  # Guardamos el cambio en la base de datos
                 break
             
         if not orden_encontrada:
